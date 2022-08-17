@@ -18,8 +18,6 @@ from bs4 import BeautifulSoup
 
 from geopy import distance
 
-import find_urls_for_yandex_maps as find_urls
-
 def get_distance(first_point, second_point):
     return distance.distance(first_point, second_point).meters
 
@@ -433,6 +431,7 @@ def to_xlsx(arr, name):
 
 
 def parse(search_link, file_name):
+
     try:
         shallow = shallow_parse(search_link)
     except:
@@ -452,6 +451,11 @@ def parse(search_link, file_name):
             print(shallow)
             print('SUCCESSFUL')
         except:
+            mode = 'a'
+            if not exists('no_elements_links.txt'):
+                mode = 'x'
+            with codecs.open('no_elements_links.txt', mode, 'utf-8') as f:
+                f.write(f'{search_link}\n')
             print("No elements")
             shallow = []
     object_to_file(os.path.join('shallow_res', f'{file_name}_shallow.json'), shallow)
@@ -467,7 +471,8 @@ def parse_urls(urls, final_file_name, add_to_url):
     i = 1
     for url in urls:
         print(f'{i}/{len(urls)}: {url}')
-        name = url.split('/')[-1].replace('\n', '')
+        url = url.replace('\n', '')
+        name = url.split('/')[-1]
         results = merge_arrays([results, parse(f'{url}{add_to_url}', name)])
         i += 1
     object_to_file(final_file_name, results)
@@ -479,6 +484,10 @@ if not os.path.isdir('res'):
     os.makedirs('res')
 if not os.path.isdir('shallow_res'):
     os.makedirs('shallow_res')
+
+if exists('no_elements_links.txt'):
+    with open('no_elements_links.txt', 'w'):
+        pass
 
 with open('urls.txt', 'r') as f:
     res = parse_urls(f.readlines(), 'final.json', '/search/скупка%20золото')
